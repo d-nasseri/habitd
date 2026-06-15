@@ -1,0 +1,55 @@
+# habitd configuration — V0.1
+# Verified on Debian 12 (Qubes OS dev qube), 2026-06-06.
+
+daemon:
+  # How habitd receives auditd events.
+  #   logparse : tail /var/log/audit/audit.log   (prototype-first, verified)
+  #   audisp   : receive pushed events on stdin from an audisp plugin (deferred)
+  source: logparse
+
+  # Restrict processing to events carrying this audit key (set in habitd.rules).
+  audit_key: habitd_exec
+
+storage:
+  # SQLite baseline + alert history. Created on first start if missing.
+  db_path: /var/lib/habitd/baseline.db
+
+learning:
+  # Continuous learning: unseen events are added to the baseline but flagged
+  # for admin review rather than silently trusted.
+  mode: continuous          # continuous | frozen
+
+  # During the initial window, alerts for new behavior are downgraded to
+  # "informational" instead of suppressed entirely (anti baseline-poisoning).
+  initial_phase_hours: 168  # 7 days
+
+alerting:
+  ntfy_url: "https://ntfy.sh"
+  ntfy_topic: "habitd-CHANGE-ME-RANDOMSTRING"  # see README security note
+  ntfy_token: ""
+  # Structured JSON consumed by Wazuh (file-based ingestion).
+  # IMPORTANT: this path must be readable by the wazuh user.
+  # Do NOT place inside /home — wazuh cannot traverse restricted home dirs.
+  json_log: /var/log/habitd/alerts.json
+
+  # Mirror alerts to syslog. Off by default for V0.1.
+  syslog: false
+
+  # Minimum severity written to the JSON log.
+  #   informational | low | medium | high | critical
+  min_level: informational
+
+source_logparse:
+  audit_log_path: /var/log/audit/audit.log
+  # Seconds without a new audit line before the parser flushes its buffer.
+  # Ensures the last event before a quiet period is not stuck indefinitely.
+  flush_timeout: 30
+
+source_audisp:
+  # Reserved. Decision deferred until log-parsing prototype proves the event shape.
+  enabled: false
+
+logging:
+  # habitd's own operational log — distinct from the alert JSON above.
+  level: DEBUG               # DEBUG | INFO | WARNING | ERROR
+  file: /var/log/habitd/habitd.log

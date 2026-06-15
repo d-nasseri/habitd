@@ -1,0 +1,47 @@
+[Unit]
+Description=habitd — behavioral process-habit detection daemon
+Documentation=https://github.com/TODO/habitd
+# auditd must be up first; it is the event source.
+After=auditd.service
+Wants=auditd.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/habitd --config /etc/habitd/config.yaml
+
+# StateDirectory= and LogsDirectory= make systemd create these with the
+# correct owner/mode and preserve them across restarts. The mtime of the
+# state dir's install-marker is used by habitd as installed_at — a
+# deletion-resistant alternative to a DB-only timestamp.
+StateDirectory=habitd
+StateDirectoryMode=0750
+LogsDirectory=habitd
+LogsDirectoryMode=0755
+
+Restart=on-failure
+RestartSec=5
+
+# Currently needs root: reads the audit log and /proc for cache seeding,
+# plus /proc/<pid>/stat for all processes regardless of owner.
+# P4 plan: drop to dedicated user + CAP_DAC_READ_SEARCH + CAP_SYS_PTRACE.
+User=root
+
+# --- Hardening ---
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+# Writable: state and logs (auto-created by StateDirectory/LogsDirectory),
+# plus /etc/habitd for the install-timestamp marker.
+ReadWritePaths=/var/lib/habitd /var/log/habitd /etc/habitd
+# Read access to the audit log for the logparse source:
+ReadOnlyPaths=/var/log/audit
+# Restrict the kernel surface habitd can call:
+SystemCallFilter=@system-service
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target

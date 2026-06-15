@@ -1,0 +1,55 @@
+<!--
+  habitd custom rules for Wazuh.
+
+  Install on the Wazuh MANAGER (not the agent):
+    sudo cp wazuh/habitd_rules.xml /var/ossec/etc/rules/habitd_rules.xml
+    sudo systemctl restart wazuh-manager
+
+  IMPORTANT — field naming:
+  habitd's JSON output uses "habitd_level" (not "level") and "process_name"
+  (not "process") to avoid collisions with Wazuh's built-in index mappings:
+    - data.process is mapped as an object in Wazuh's OpenSearch index template;
+      a string value causes a mapper_parsing_exception.
+    - data.level would shadow rule.level.
+  These field names are intentional and must match alert.py's build() output.
+
+  Rule ID range: 100500–100509 (custom range, no conflicts with Wazuh builtins).
+-->
+<group name="habitd,">
+
+  <!-- Base rule: any habitd event (all alerts carry tool=habitd) -->
+  <rule id="100500" level="3">
+    <decoded_as>json</decoded_as>
+    <field name="tool">habitd</field>
+    <description>habitd: behavioral detection event</description>
+  </rule>
+
+  <!-- Layer 1 static rule hit or suspicious path execution -->
+  <rule id="100501" level="12">
+    <if_sid>100500</if_sid>
+    <field name="habitd_level">high</field>
+    <description>habitd: HIGH anomaly - $(process_name) parent=$(parent_name)</description>
+  </rule>
+
+  <!-- Critical severity (reserved for future use) -->
+  <rule id="100502" level="15">
+    <if_sid>100500</if_sid>
+    <field name="habitd_level">critical</field>
+    <description>habitd: CRITICAL anomaly - $(process_name) parent=$(parent_name)</description>
+  </rule>
+
+  <!-- Informational: learning phase baseline acquisition -->
+  <rule id="100503" level="3">
+    <if_sid>100500</if_sid>
+    <field name="habitd_level">informational</field>
+    <description>habitd: new baseline tuple (learning) - $(process_name)</description>
+  </rule>
+
+  <!-- Medium: new behavior on a settled system (post learning phase) -->
+  <rule id="100504" level="7">
+    <if_sid>100500</if_sid>
+    <field name="habitd_level">medium</field>
+    <description>habitd: MEDIUM anomaly - $(process_name) parent=$(parent_name)</description>
+  </rule>
+
+</group>

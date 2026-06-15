@@ -1,0 +1,32 @@
+[project]
+name = "habitd"
+version = "0.1.0"
+description = "Behavioral Linux daemon that learns a system's process habits via auditd and flags deviations (LotL detection)."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "GPL-3.0-or-later" }
+authors = [{ name = "TODO" }]
+dependencies = [
+    "colorlog>=6.0,<7.0",
+    "PyYAML>=6.0,<7.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.5",
+]
+
+[project.scripts]
+habitd = "habitd.__main__:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

@@ -1,0 +1,21 @@
+# habitd auditd rules — V0.1 (execve only)
+#
+# Install:
+#   sudo cp config/habitd.rules /etc/audit/rules.d/habitd.rules
+#   sudo augenrules --load
+#   sudo auditctl -l          # verify
+#
+# The -k key ("habitd") lets habitd filter only its own events out of the
+# global audit stream and lets you query manually:
+#   sudo ausearch -k habitd_exec
+
+# Every process start, 64-bit. This is the entire V0.1 data source.
+-a always,exit -F arch=b64 -S execve -k habitd_exec
+
+# 32-bit compat — uncomment on systems that still run 32-bit binaries.
+# -a always,exit -F arch=b32 -S execve -k habitd_exec
+
+# ---------------------------------------------------------------------------
+# Phase 2 (do NOT enable yet — connect() is extremely loud on busy systems):
+# -a always,exit -F arch=b64 -S connect -k habitd_connect
+# -a always,exit -F arch=b64 -S ptrace  -k habitd_ptrace

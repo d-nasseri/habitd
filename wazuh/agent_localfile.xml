@@ -1,0 +1,22 @@
+<!--
+  Wazuh agent localfile configuration for habitd.
+
+  Add this block to /var/ossec/etc/ossec.conf on the AGENT (not the manager),
+  inside the <ossec_config> element, before </ossec_config>.
+
+  Then: sudo systemctl restart wazuh-agent
+
+  IMPORTANT:
+  - The alerts.json path MUST be accessible by the wazuh user.
+  - Do NOT place alerts.json inside /home — home directories are typically
+    mode 0700 and wazuh cannot traverse them. Use /var/log/habitd/ instead.
+  - If habitd runs as root and creates the file, chown it:
+      sudo mkdir -p /var/log/habitd
+      sudo chown wazuh:wazuh /var/log/habitd
+      sudo chown wazuh:wazuh /var/log/habitd/alerts.json
+-->
+<localfile>
+  <log_format>json</log_format>
+  <location>/var/log/habitd/alerts.json</location>
+  <label key="source">habitd</label>
+</localfile>

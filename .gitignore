@@ -1,0 +1,23 @@
+# Runtime artifacts — never commit
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.bak
+alerts.json
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+src/habitd.egg-info/
+.venv/
+venv/
+build/
+dist/
+
+# Pytest / tooling
+.pytest_cache/
+.ruff_cache/
